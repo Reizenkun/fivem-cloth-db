@@ -14,7 +14,7 @@ You can see preview of items on https://reizenkun.github.io/fivem-cloth-db/
 ### Cloudflare R2 (Recommended)
 
 ```
-https://https://pub-b5680e433ce7438d9f7fede88058efc3.r2.dev/{gender}/{part}/{drawableId}_{texId}.webp
+https://pub-b5680e433ce7438d9f7fede88058efc3.r2.dev/{gender}/{part}/{drawableId}_{texId}.webp
 ```
 
 Example:
