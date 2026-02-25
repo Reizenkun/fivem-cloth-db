@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reizen Cloth Database</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --cds-background: #161616;
+      --cds-layer-01: #262626;
+      --cds-layer-02: #393939;
+      --cds-layer-hover: #353535;
+      --cds-layer-active: #525252;
+      --cds-border-subtle: #393939;
+      --cds-border-strong: #6f6f6f;
+      --cds-text-primary: #f4f4f4;
+      --cds-text-secondary: #c6c6c6;
+      --cds-text-helper: #8d8d8d;
+      --cds-interactive: #4589ff;
+      --cds-highlight: #002d9c;
+      --cds-tag-bg: #1a3a6e;
+      --cds-tag-text: #a6c8ff;
+      --cds-spacing-03: 8px;
+      --cds-spacing-05: 16px;
+      --cds-spacing-06: 24px;
+      --cds-spacing-07: 32px;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', system-ui, sans-serif;
+      background: var(--cds-background);
+      color: var(--cds-text-primary);
+      font-size: 14px;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 48px;
+      bottom: 0;
+      width: 240px;
+      background: var(--cds-layer-01);
+      border-right: 1px solid var(--cds-border-subtle);
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      border-bottom: 1px solid var(--cds-border-subtle);
+    }
+
+    .sidebar-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.32px;
+      text-transform: uppercase;
+      color: var(--cds-text-helper);
+      padding: 16px 16px 8px;
+    }
+
+    .sidebar button {
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      background: transparent;
+      border: none;
+      border-left: 3px solid transparent;
+      color: var(--cds-text-secondary);
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+      font-size: 14px;
+      transition: background 0.1s, border-color 0.1s;
+    }
+
+    .sidebar button:hover {
+      background: var(--cds-layer-hover);
+    }
+
+    .sidebar button.active {
+      background: var(--cds-layer-active);
+      border-left-color: var(--cds-interactive);
+      color: var(--cds-text-primary);
+      font-weight: 500;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: var(--cds-layer-01);
+      border-bottom: 1px solid var(--cds-border-subtle);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      z-index: 50;
+    }
+
+    .topbar-title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+    }
+
+    .topbar-title span {
+      color: var(--cds-interactive);
+    }
+
+    /* ── Main ── */
+    .main {
+      margin-left: 240px;
+      margin-top: 48px;
+      padding: var(--cds-spacing-07);
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: var(--cds-spacing-05);
+      margin-bottom: var(--cds-spacing-06);
+      flex-wrap: wrap;
+      padding-bottom: var(--cds-spacing-05);
+      border-bottom: 1px solid var(--cds-border-subtle);
+    }
+
+    .page-header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      font-family: 'IBM Plex Sans', sans-serif;
+    }
+
+    .tag {
+      display: inline-block;
+      background: var(--cds-tag-bg);
+      color: var(--cds-tag-text);
+      font-size: 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      padding: 2px 8px;
+      letter-spacing: 0.32px;
+    }
+
+    .size-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--cds-text-helper);
+      letter-spacing: 0.32px;
+    }
+
+    .size-control label {
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .size-control input[type="range"] {
+      width: 128px;
+      accent-color: var(--cds-interactive);
+    }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      gap: 1px;
+      background: var(--cds-border-subtle);
+      grid-template-columns: repeat(auto-fill, minmax(var(--thumb-size, 180px), 1fr));
+    }
+
+    .card {
+      background: var(--cds-layer-01);
+      cursor: pointer;
+      transition: background 0.1s;
+      position: relative;
+    }
+
+    .card:hover {
+      background: var(--cds-layer-hover);
+    }
+
+    .card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: contain;
+      background: var(--cds-background);
+      display: block;
+    }
+
+    .card .label {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--cds-text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.32px;
+      border-top: 1px solid var(--cds-border-subtle);
+    }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(34, 34, 34, 0.9);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .lightbox.open {
+      display: flex;
+    }
+
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+    }
+
+    .lightbox .info {
+      position: absolute;
+      bottom: 24px;
+      color: var(--cds-text-secondary);
+      font-size: 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--cds-layer-01);
+      padding: 8px 16px;
+      border: 1px solid var(--cds-border-subtle);
+      letter-spacing: 0.32px;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--cds-background);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--cds-layer-02);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--cds-layer-active);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <div class="topbar-title"><span>Cloth</span>&nbsp;/ Viewer</div>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Gender</div>
+      <div id="gender-buttons"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Component</div>
+      <div id="comp-buttons"></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <h1 id="title">Select a component</h1>
+      <span class="tag" id="count"></span>
+      <div class="size-control">
+        <label>Size</label>
+        <input type="range" id="thumb-size" min="100" max="400" value="180">
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="lightbox" id="lightbox">
+    <img id="lb-img" src="">
+    <div class="info" id="lb-info"></div>
+  </div>
+
+  <script>
+    const RENDERS_DIR = 'renders';
+    let structure = {};
+    let currentGender = null;
+    let currentComp = null;
+
+    async function loadStructure() {
+      const resp = await fetch('renders/_index.json');
+      structure = await resp.json();
+
+      const genders = Object.keys(structure);
+      const genderBtns = document.getElementById('gender-buttons');
+      genders.forEach(g => {
+        const btn = document.createElement('button');
+        btn.textContent = g;
+        btn.onclick = () => selectGender(g);
+        genderBtns.appendChild(btn);
+      });
+      if (genders.length) selectGender(genders[0]);
+    }
+
+    function selectGender(g) {
+      currentGender = g;
+      document.querySelectorAll('#gender-buttons button').forEach(b =>
+        b.classList.toggle('active', b.textContent === g));
+
+      const compBtns = document.getElementById('comp-buttons');
+      compBtns.innerHTML = '';
+      const comps = Object.keys(structure[g]).sort();
+      comps.forEach(c => {
+        const btn = document.createElement('button');
+        btn.textContent = `${c} (${structure[g][c].length})`;
+        btn.dataset.comp = c;
+        btn.onclick = () => selectComp(c);
+        compBtns.appendChild(btn);
+      });
+      if (comps.length) selectComp(comps[0]);
+    }
+
+    let observer = null;
+
+    function selectComp(c) {
+      currentComp = c;
+      document.querySelectorAll('#comp-buttons button').forEach(b =>
+        b.classList.toggle('active', b.dataset.comp === c));
+
+      const items = structure[currentGender][c];
+      document.getElementById('title').textContent = `${currentGender} / ${c}`;
+      document.getElementById('count').textContent = `${items.length} renders`;
+
+      if (observer) observer.disconnect();
+
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+            observer.unobserve(img);
+          }
+        });
+      }, { rootMargin: '200px' });
+
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const img = document.createElement('img');
+        img.dataset.src = item.path;
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.textContent = `${item.drawable}_${item.texture}`;
+        card.appendChild(img);
+        card.appendChild(label);
+        card.onclick = () => openLightbox(item);
+        grid.appendChild(card);
+        observer.observe(img);
+      });
+    }
+
+    // Lightbox
+    const lightbox = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lb-img');
+    const lbInfo = document.getElementById('lb-info');
+
+    function openLightbox(item) {
+      lbImg.src = item.path;
+      lbInfo.textContent = `${currentGender}/${currentComp}/${item.drawable}_${item.texture}.png`;
+      lightbox.classList.add('open');
+    }
+    lightbox.onclick = () => lightbox.classList.remove('open');
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') lightbox.classList.remove('open');
+    });
+
+    // Thumb size slider
+    const slider = document.getElementById('thumb-size');
+    slider.oninput = () => {
+      document.getElementById('grid').style.setProperty('--thumb-size', slider.value + 'px');
+    };
+
+    loadStructure();
+  </script>
+</body>
+
+</html>
