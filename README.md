@@ -1,4 +1,4 @@
-# Clothing Assets Viewer
+# Fivem Clothing Database & Viewer
 
 A catalog with pre-rendered clothing from GTA V (prior to 2025_02 update).
 Fully rendered: head, berd, hair, uppr, lowr, hand, feet, teef, accs, task, decl, jbib, p_head, p_eyes, p_ears, p_lwrist, p_rwrist.
