@@ -304,7 +304,7 @@
     let currentComp = null;
 
     async function loadStructure() {
-      const resp = await fetch('renders/_index.json');
+      const resp = await fetch('renders/index.json');
       structure = await resp.json();
 
       const genders = Object.keys(structure);
