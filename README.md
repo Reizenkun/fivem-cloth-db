@@ -13,6 +13,7 @@ You can see preview of items on https://reizenkun.github.io/fivem-cloth-db/
 
 ### Cloudflare R2 (Recommended)
 
+IMPORTANT! Use pub-b5680e433ce7438d9f7fede88058efc3.r2.dev only for developing, in future I will provide static link without rate-limits and disable this link. Or you can clone this repo and host clothes for yourself.
 ```
 https://pub-b5680e433ce7438d9f7fede88058efc3.r2.dev/{gender}/{part}/{drawableId}_{texId}.webp
 ```
@@ -33,7 +34,7 @@ const baseUrl = "https://pub-b5680e433ce7438d9f7fede88058efc3.r2.dev";
 const getIconUrl = (gender, category, drawable, texture = 0) => 
   `${baseUrl}/${gender}/${category}/${drawable}_${texture}.webp`;
 
-// Usage example: getting a male tops (jbib) image (drawable 15, texture 0)
+// Usage example: getting a male torso (jbib) image (drawable 15, texture 0)
 const shirtUrl = getIconUrl("male", "jbib", 15, 0);
 // Returns: https://pub-b5680e433ce7438d9f7fede88058efc3.r2.dev/male/jbib/15_0.webp
 ```
