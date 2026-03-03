@@ -43,6 +43,16 @@
       font-size: 14px;
     }
 
+    /* ── Sidebar backdrop (mobile only) ── */
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 40;
+    }
+    .sidebar-backdrop.open { display: block; }
+
     /* ── Sidebar ── */
     .sidebar {
       position: fixed;
@@ -53,6 +63,7 @@
       background: var(--cds-layer-01);
       border-right: 1px solid var(--cds-border-subtle);
       overflow-y: auto;
+      z-index: 45;
     }
 
     .sidebar-section {
@@ -81,6 +92,7 @@
       font: inherit;
       font-size: 14px;
       transition: background 0.1s, border-color 0.1s;
+      min-height: 44px;
     }
 
     .sidebar button:hover {
@@ -106,6 +118,7 @@
       display: flex;
       align-items: center;
       padding: 0 16px;
+      gap: 8px;
       z-index: 50;
     }
 
@@ -118,6 +131,19 @@
     .topbar-title span {
       color: var(--cds-interactive);
     }
+
+    /* ── Hamburger button ── */
+    .menu-btn {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--cds-text-primary);
+      cursor: pointer;
+      padding: 6px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .menu-btn svg { display: block; }
 
     /* ── Main ── */
     .main {
@@ -211,6 +237,9 @@
       border-top: 1px solid var(--cds-border-subtle);
     }
 
+    /* ── Scroll sentinel ── */
+    #scroll-sentinel { height: 1px; }
+
     /* ── Lightbox ── */
     .lightbox {
       display: none;
@@ -260,12 +289,56 @@
     ::-webkit-scrollbar-thumb:hover {
       background: var(--cds-layer-active);
     }
+
+    /* ── Mobile ── */
+    @media (max-width: 767px) {
+      .menu-btn { display: flex; }
+
+      .sidebar {
+        top: 0;
+        transform: translateX(-100%);
+        transition: transform 0.22s ease;
+        width: min(240px, 80vw);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+      }
+      .sidebar.open { transform: translateX(0); }
+
+      .main {
+        margin-left: 0;
+        padding: 16px 12px;
+      }
+
+      .page-header h1 { font-size: 16px; }
+
+      .size-control label { display: none; }
+      .size-control input[type="range"] { width: 80px; }
+
+      .grid { --thumb-size: 120px; }
+
+      .lightbox img { max-width: 96vw; max-height: 80vh; }
+      .lightbox .info {
+        bottom: 12px;
+        font-size: 12px;
+        padding: 6px 12px;
+        max-width: 90vw;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
   </style>
 </head>
 
 <body>
 
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
   <div class="topbar">
+    <button class="menu-btn" id="menu-btn" aria-label="Toggle menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <line x1="3" y1="5" x2="17" y2="5"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="15" x2="17" y2="15"/>
+      </svg>
+    </button>
     <div class="topbar-title"><span>Cloth</span>&nbsp;/ Viewer</div>
   </div>
 
@@ -290,6 +363,7 @@
       </div>
     </div>
     <div class="grid" id="grid"></div>
+    <div id="scroll-sentinel"></div>
   </div>
 
   <div class="lightbox" id="lightbox">
@@ -298,10 +372,14 @@
   </div>
 
   <script>
-    const RENDERS_DIR = 'renders';
+    const BATCH = 60;
     let structure = {};
     let currentGender = null;
     let currentComp = null;
+    let currentItems = [];
+    let renderOffset = 0;
+    let imgObserver = null;
+    let sentinelObserver = null;
 
     async function loadStructure() {
       const resp = await fetch('renders/index.json');
@@ -336,33 +414,49 @@
       if (comps.length) selectComp(comps[0]);
     }
 
-    let observer = null;
-
     function selectComp(c) {
       currentComp = c;
       document.querySelectorAll('#comp-buttons button').forEach(b =>
         b.classList.toggle('active', b.dataset.comp === c));
 
-      const items = structure[currentGender][c];
+      currentItems = structure[currentGender][c];
+      renderOffset = 0;
+
       document.getElementById('title').textContent = `${currentGender} / ${c}`;
-      document.getElementById('count').textContent = `${items.length} renders`;
+      document.getElementById('count').textContent = `${currentItems.length} renders`;
 
-      if (observer) observer.disconnect();
+      if (imgObserver) imgObserver.disconnect();
+      if (sentinelObserver) sentinelObserver.disconnect();
 
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '';
+      document.getElementById('grid').innerHTML = '';
 
-      observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            img.src = img.dataset.src;
-            observer.unobserve(img);
+      imgObserver = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.src = e.target.dataset.src;
+            imgObserver.unobserve(e.target);
           }
         });
-      }, { rootMargin: '200px' });
+      }, { rootMargin: '400px' });
 
-      items.forEach(item => {
+      sentinelObserver = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) renderBatch();
+      }, { rootMargin: '300px' });
+
+      sentinelObserver.observe(document.getElementById('scroll-sentinel'));
+
+      // Close sidebar on mobile after selecting component
+      if (window.innerWidth < 768) closeSidebar();
+
+      renderBatch();
+    }
+
+    function renderBatch() {
+      const grid = document.getElementById('grid');
+      const end = Math.min(renderOffset + BATCH, currentItems.length);
+
+      for (let i = renderOffset; i < end; i++) {
+        const item = currentItems[i];
         const card = document.createElement('div');
         card.className = 'card';
         const img = document.createElement('img');
@@ -374,11 +468,16 @@
         card.appendChild(label);
         card.onclick = () => openLightbox(item);
         grid.appendChild(card);
-        observer.observe(img);
-      });
+        imgObserver.observe(img);
+      }
+
+      renderOffset = end;
+      if (renderOffset >= currentItems.length) {
+        sentinelObserver.disconnect();
+      }
     }
 
-    // Lightbox
+    // ── Lightbox ──
     const lightbox = document.getElementById('lightbox');
     const lbImg = document.getElementById('lb-img');
     const lbInfo = document.getElementById('lb-info');
@@ -393,11 +492,29 @@
       if (e.key === 'Escape') lightbox.classList.remove('open');
     });
 
-    // Thumb size slider
+    // ── Thumb size slider ──
     const slider = document.getElementById('thumb-size');
+    if (window.innerWidth < 768) {
+      slider.value = 120;
+    }
     slider.oninput = () => {
       document.getElementById('grid').style.setProperty('--thumb-size', slider.value + 'px');
     };
+
+    // ── Mobile sidebar toggle ──
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebar-backdrop').classList.remove('open');
+    }
+
+    document.getElementById('menu-btn').onclick = () => {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      const isOpen = sidebar.classList.toggle('open');
+      backdrop.classList.toggle('open', isOpen);
+    };
+
+    document.getElementById('sidebar-backdrop').onclick = closeSidebar;
 
     loadStructure();
   </script>
