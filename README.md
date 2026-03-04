@@ -17,9 +17,18 @@ You can see preview of items on https://reizenkun.github.io/fivem-cloth-db/
 https://cloth.reizen.one/{gender}/{part}/{drawableId}_{texId}.webp
 ```
 
+or if you need trimmed version of the image (for inventories or if you decide to set the margins yourself)
+
+```
+https://cloth.reizen.one/{gender}/{part}/trimmed/{drawableId}_{texId}.webp
+```
+
 Example:
 ```
 https://cloth.reizen.one/male/accs/0_0.webp
+```
+```
+https://cloth.reizen.one/male/accs/trimmed/0_0.webp
 ```
 
 ## Integration Examples
