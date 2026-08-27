@@ -7,7 +7,7 @@ Some items (for example, the night vision goggles in the p_head) have texture is
 
 ## Web-preview
 
-You can see preview of items on https://reizenkun.github.io/fivem-cloth-db/
+You can see preview of items on https://reizenkun.github.io/gtav-fivem-clothes/
 
 ## Accessing Assets via CDN
 
